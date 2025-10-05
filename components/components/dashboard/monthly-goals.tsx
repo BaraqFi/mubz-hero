@@ -48,6 +48,7 @@ export default function MonthlyGoals() {
     key_resources: '',
     targets: ['', '', ''] // Start with 3 empty targets
   });
+  const [goalInputValues, setGoalInputValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (session) {
@@ -70,6 +71,15 @@ export default function MonthlyGoals() {
 
     setGoals(goalsWithTargets);
   };
+
+  // Initialize local input state for each goal when goals are loaded/refreshed
+  useEffect(() => {
+    const initialValues: Record<string, string> = {};
+    goals.forEach((g) => {
+      if (g.id) initialValues[g.id] = g.goal || '';
+    });
+    setGoalInputValues(initialValues);
+  }, [goals]);
 
   const handleAddGoal = async () => {
     if (session && newGoal.primary_focus.trim() !== '') {
@@ -279,8 +289,16 @@ export default function MonthlyGoals() {
                         {index + 1}
                       </div>
                       <Input
-                        value={goal.goal || `Goal ${index + 1}`}
-                        onChange={(e) => handleUpdateGoal(goal.id, { goal: e.target.value })}
+                        value={goalInputValues[goal.id] ?? goal.goal ?? `Goal ${index + 1}`}
+                        onChange={(e) =>
+                          setGoalInputValues((prev) => ({ ...prev, [goal.id]: e.target.value }))
+                        }
+                        onBlur={(e) => {
+                          const nextValue = e.target.value.trim();
+                          if (nextValue !== (goal.goal || '')) {
+                            void handleUpdateGoal(goal.id, { goal: nextValue });
+                          }
+                        }}
                         className="h-8"
                       />
                     </div>
@@ -315,12 +333,18 @@ export default function MonthlyGoals() {
                               onClick={async () => {
                                 if (!goal.id) return;
                                 setIsDeleting(true);
-                                // delete targets first (FK)
-                                await deleteWhere('monthly_goal_targets', 'goal_id', goal.id);
-                                await deleteData('monthly_goals', goal.id);
-                                setIsDeleting(false);
-                                setDeletingGoalId(null);
-                                await loadGoals();
+                                try {
+                                  // delete targets first (FK)
+                                  await deleteWhere('monthly_goal_targets', 'goal_id', goal.id);
+                                  await deleteData('monthly_goals', goal.id);
+                                  setDeletingGoalId(null);
+                                  await loadGoals();
+                                } catch (error) {
+                                  console.error('Failed to delete goal:', error);
+                                  // Consider showing a toast notification here
+                                } finally {
+                                  setIsDeleting(false);
+                                }
                               }}
                               disabled={isDeleting}
                             >
@@ -338,8 +362,16 @@ export default function MonthlyGoals() {
                     <label className="text-sm font-medium mb-2 block">Primary Focus</label>
                     {isEditing ? (
                       <Input
-                        value={goal.goal || ''}
-                        onChange={(e) => handleUpdateGoal(goal.id, { goal: e.target.value })}
+                        value={goalInputValues[goal.id] ?? goal.goal ?? ''}
+                        onChange={(e) =>
+                          setGoalInputValues((prev) => ({ ...prev, [goal.id]: e.target.value }))
+                        }
+                        onBlur={(e) => {
+                          const nextValue = e.target.value.trim();
+                          if (nextValue !== (goal.goal || '')) {
+                            void handleUpdateGoal(goal.id, { goal: nextValue });
+                          }
+                        }}
                       />
                     ) : (
                       <p className="text-sm">{goal.goal || 'No focus set'}</p>

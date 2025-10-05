@@ -45,12 +45,20 @@ export async function upsertData<T>(table: string, records: T | T[]) {
 }
 
 // Generic update by id
-export async function updateById<T extends { id: string }>(table: string, id: string, updates: Partial<T>) {
-  const { data, error } = await supabase.from(table).update(updates).eq('id', id);
+export async function updateById<T extends { id: string }>(
+  table: string,
+  id: string,
+  updates: Partial<T>
+): Promise<{ data: T[] | null; error: any }> {
+  const { data, error } = await supabase
+    .from(table)
+    .update(updates)
+    .eq('id', id)
+    .select();
   if (error) {
     console.error(`Error updating ${table} id=${id}:`, error);
   }
-  return data;
+  return { data, error };
 }
 
 // Generic insert function

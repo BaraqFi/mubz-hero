@@ -63,9 +63,9 @@ export default function DailyTasks() {
         task: t,
         is_completed: false,
       }));
-      const { data: seeded } = await insertData('daily_tasks', seed as any);
+      const { data: seeded } = await insertData('daily_tasks', seed);
       if (seeded) {
-        todayTasks.push(...(seeded as any));
+        todayTasks.push(...(seeded as DailyTask[]));
       }
     }
     while (todayTasks.length < 9) {

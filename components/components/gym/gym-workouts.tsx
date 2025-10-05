@@ -76,7 +76,8 @@ export default function GymWorkouts() {
         is_required: false,
         is_completed: false,
       }));
-      await insertData('gym_workouts', seedOpt as any);
+      const { data: seededOpt } = await insertData('gym_workouts', seedOpt as any);
+      if (seededOpt) optional.push(...(seededOpt as any));
     }
     // Ensure exactly 9 required
     while (required.length < 9) {
