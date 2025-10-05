@@ -72,13 +72,25 @@ export default function MonthlyGoals() {
     setGoals(goalsWithTargets);
   };
 
-  // Initialize local input state for each goal when goals are loaded/refreshed
   useEffect(() => {
     const initialValues: Record<string, string> = {};
     goals.forEach((g) => {
       if (g.id) initialValues[g.id] = g.goal || '';
     });
     setGoalInputValues(initialValues);
+  }, []); // Run only once on mount
+
+  // Merge new goals into goalInputValues without overwriting existing edits
+  useEffect(() => {
+    setGoalInputValues((prev) => {
+      const updated = { ...prev };
+      goals.forEach((g) => {
+        if (g.id && !(g.id in prev)) {
+          updated[g.id] = g.goal || '';
+        }
+      });
+      return updated;
+    });
   }, [goals]);
 
   const handleAddGoal = async () => {
@@ -296,7 +308,12 @@ export default function MonthlyGoals() {
                         onBlur={(e) => {
                           const nextValue = e.target.value.trim();
                           if (nextValue !== (goal.goal || '')) {
-                            void handleUpdateGoal(goal.id, { goal: nextValue });
+                            handleUpdateGoal(goal.id, { goal: nextValue }).catch((error) => {
+                              console.error('Failed to update goal:', error);
+                              // Reset to original value on error
+                              setGoalInputValues((prev) => ({ ...prev, [goal.id]: goal.goal || '' }));
+                              // Consider showing a toast notification here
+                            });
                           }
                         }}
                         className="h-8"
