@@ -16,14 +16,14 @@ export default function ThoughtLogsFAB() {
   // Lock body scroll when panel is open
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const original = document.body.style.overflow;
+    const originalStyle = window.getComputedStyle(document.body).overflow;
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = original || '';
+      document.body.style.overflow = originalStyle;
     }
     return () => {
-      document.body.style.overflow = original || '';
+      document.body.style.overflow = originalStyle;
     };
   }, [isOpen]);
 
@@ -53,7 +53,7 @@ export default function ThoughtLogsFAB() {
   };
 
   const loadPastEntries = async () => {
-    if (session && pastEntries.length === 0) {
+    if (session) {
       const entries = await getData<ThoughtLog>('thought_logs', session.user.id);
       setPastEntries(entries);
     }
@@ -73,53 +73,56 @@ export default function ThoughtLogsFAB() {
 
       {/* Side Panel Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 overflow-hidden" onClick={() => setIsOpen(false)}>
+        <div 
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" 
+          onClick={() => setIsOpen(false)}
+        >
           <div 
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-background border-l shadow-xl"
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-background border-l shadow-xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold">Log Your Thoughts</h2>
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">Log Your Thoughts</h2>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(false)}
+                className="rounded-full"
               >
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
-            {/* Date and View Past Entries */}
-            <div className="flex items-center justify-between p-6">
-              <span className="text-sm text-muted-foreground">
-                {formattedDate} - New Entry
-              </span>
-              <Button
-                variant="link"
-                size="sm"
-                onClick={loadPastEntries}
-                className="text-primary p-0 h-auto"
-              >
-                View Past Entries ({pastEntries.length})
-              </Button>
-            </div>
-
             {/* Content Area */}
-            <div className="flex-1 p-6">
+            <div className="flex-1 overflow-y-auto p-4">
+              {/* Date and View Past Entries */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-muted-foreground">
+                  {formattedDate} - {showPastEntries ? 'Past Entries' : 'New Entry'}
+                </span>
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={loadPastEntries}
+                  className="text-primary p-0 h-auto"
+                >
+                  {showPastEntries ? 'New Entry' : `View Past (${pastEntries.length})`}
+                </Button>
+              </div>
+
               {showPastEntries ? (
                 <div className="space-y-4">
-                  <h3 className="font-medium">Past Entries</h3>
                   {pastEntries.length === 0 ? (
-                    <p className="text-muted-foreground text-sm">No past entries found.</p>
+                    <p className="text-muted-foreground text-sm text-center py-8">No past entries found.</p>
                   ) : (
                     <div className="space-y-3">
                       {pastEntries.map((entry) => (
                         <div key={entry.id} className="p-3 bg-muted rounded-lg">
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {new Date(entry.created_at).toLocaleDateString()}
+                          <p className="text-xs text-muted-foreground mb-1.5">
+                            {new Date(entry.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
                           </p>
-                          <p className="text-sm">{entry.log}</p>
+                          <p className="text-sm whitespace-pre-wrap">{entry.log}</p>
                         </div>
                       ))}
                     </div>
@@ -130,20 +133,28 @@ export default function ThoughtLogsFAB() {
                   placeholder="What did you learn today? How did you feel? What did you accomplish?"
                   value={currentEntry}
                   onChange={(e) => setCurrentEntry(e.target.value)}
-                  className="min-h-[400px] resize-none border-0 focus-visible:ring-0 text-sm"
+                  className="h-full w-full resize-none border-0 focus-visible:ring-0 text-base p-0"
                 />
               )}
             </div>
 
-            {/* Save Button */}
-            <div className="p-6 border-t">
+            {/* Footer */}
+            <div className="p-4 border-t">
               {!showPastEntries && (
                 <Button
                   onClick={handleSaveEntry}
-                  className="w-full bg-white text-black hover:bg-gray-100 border border-gray-300"
+                  className="w-full"
                   disabled={!currentEntry.trim()}
                 >
                   Save Entry
+                </Button>
+              )}
+               {showPastEntries && (
+                <Button
+                  onClick={() => setShowPastEntries(false)}
+                  className="w-full"
+                >
+                  Back to New Entry
                 </Button>
               )}
             </div>
