@@ -44,6 +44,15 @@ export async function upsertData<T>(table: string, records: T | T[]) {
   return data;
 }
 
+// Generic update by id
+export async function updateById<T extends { id: string }>(table: string, id: string, updates: Partial<T>) {
+  const { data, error } = await supabase.from(table).update(updates).eq('id', id);
+  if (error) {
+    console.error(`Error updating ${table} id=${id}:`, error);
+  }
+  return data;
+}
+
 // Generic insert function
 export async function insertData<T>(table: string, records: T | T[]) {
     const { data, error } = await supabase.from(table).insert(records);
@@ -52,4 +61,54 @@ export async function insertData<T>(table: string, records: T | T[]) {
         console.error(`Error inserting to ${table}:`, error);
     }
     return { data, error };
+}
+
+// Generic delete by id
+export async function deleteData(table: string, id: string) {
+  const { error } = await supabase.from(table).delete().eq('id', id);
+  if (error) {
+    console.error(`Error deleting from ${table}:`, error);
+    return { error };
+  }
+  return { error: null };
+}
+
+// Generic delete where helper
+export async function deleteWhere(table: string, column: string, value: string | number) {
+  const { error } = await supabase.from(table).delete().eq(column, value);
+  if (error) {
+    console.error(`Error deleting from ${table} where ${column}=${value}:`, error);
+    return { error };
+  }
+  return { error: null };
+}
+
+// Generic delete with multiple filters
+export async function deleteWhereAll(table: string, filters: Record<string, string | number | boolean>) {
+  let query = supabase.from(table).delete();
+  Object.entries(filters).forEach(([key, value]) => {
+    // @ts-ignore - supabase query builder chaining
+    query = query.eq(key, value);
+  });
+  const { error } = await query;
+  if (error) {
+    console.error(`Error deleting from ${table} with filters`, filters, error);
+    return { error };
+  }
+  return { error: null };
+}
+
+// Generic select with filters
+export async function getWhere<T>(table: string, filters: Record<string, string | number | boolean>) {
+  let query = supabase.from(table).select('*');
+  Object.entries(filters).forEach(([key, value]) => {
+    // @ts-ignore - supabase query builder chaining
+    query = query.eq(key, value);
+  });
+  const { data, error } = await query;
+  if (error) {
+    console.error(`Error fetching from ${table} with filters`, filters, error);
+    return [] as T[];
+  }
+  return data as T[];
 }

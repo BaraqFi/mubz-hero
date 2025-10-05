@@ -26,6 +26,22 @@ export default function GymWorkouts() {
   const [optionalWorkouts, setOptionalWorkouts] = useState<GymWorkout[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingOptionalIndex, setEditingOptionalIndex] = useState<number | null>(null);
+  const REQUIRED_DEFAULTS = [
+    'Decline push ups x12',
+    'Wide push ups x12',
+    'Dips push ups x15',
+    'Shoulder extension pumps x10',
+    'Side crunches x10',
+    'Leg raises x12',
+    'Knuckle push ups x10',
+    'Hip extension pumps x15',
+    'Kneeling leg raises x15',
+  ];
+  const OPTIONAL_DEFAULTS = [
+    "Shoulder V's x10",
+    'Towel rows x10',
+    'Back rows x10',
+  ];
 
   useEffect(() => {
     if (session) {
@@ -42,18 +58,35 @@ export default function GymWorkouts() {
     const required = data.filter(w => w.is_required).slice(0, 9);
     const optional = data.filter(w => !w.is_required);
     
-    // Ensure we have exactly 9 required workouts
+    // Seed defaults if none exist
+    if (required.length === 0) {
+      const seedReq = REQUIRED_DEFAULTS.map((w) => ({
+        user_id: session.user.id,
+        workout: w,
+        is_required: true,
+        is_completed: false,
+      }));
+      const { data: seededReq } = await insertData('gym_workouts', seedReq as any);
+      if (seededReq) required.push(...(seededReq as any));
+    }
+    if (optional.length === 0) {
+      const seedOpt = OPTIONAL_DEFAULTS.map((w) => ({
+        user_id: session.user.id,
+        workout: w,
+        is_required: false,
+        is_completed: false,
+      }));
+      await insertData('gym_workouts', seedOpt as any);
+    }
+    // Ensure exactly 9 required
     while (required.length < 9) {
-      const newWorkout = {
+      const { data: result } = await insertData('gym_workouts', {
         user_id: session.user.id,
         workout: '',
         is_required: true,
         is_completed: false,
-      };
-      const { data: result } = await insertData('gym_workouts', newWorkout);
-      if (result && result[0]) {
-        required.push(result[0] as any);
-      }
+      } as any);
+      if (result && result[0]) required.push(result[0] as any);
     }
     
     setRequiredWorkouts(required.slice(0, 9));

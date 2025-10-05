@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BookOpen, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +13,19 @@ export default function ThoughtLogsFAB() {
   const [currentEntry, setCurrentEntry] = useState('');
   const [pastEntries, setPastEntries] = useState<ThoughtLog[]>([]);
   const [showPastEntries, setShowPastEntries] = useState(false);
+  // Lock body scroll when panel is open
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const original = document.body.style.overflow;
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = original || '';
+    }
+    return () => {
+      document.body.style.overflow = original || '';
+    };
+  }, [isOpen]);
 
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', {
@@ -60,7 +73,7 @@ export default function ThoughtLogsFAB() {
 
       {/* Side Panel Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50" onClick={() => setIsOpen(false)}>
+        <div className="fixed inset-0 z-50 bg-black/50 overflow-hidden" onClick={() => setIsOpen(false)}>
           <div 
             className="fixed right-0 top-0 h-full w-full max-w-md bg-background border-l shadow-xl"
             onClick={(e) => e.stopPropagation()}

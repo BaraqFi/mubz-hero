@@ -13,7 +13,8 @@ import {
   getData,
   DailyTask,
 } from '@/lib/data-service';
-import { Calendar } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface DayData {
   date: string;
@@ -27,6 +28,7 @@ export default function StreakCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [completedDays, setCompletedDays] = useState<Set<string>>(new Set());
   const [streak, setStreak] = useState(0);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -39,7 +41,7 @@ export default function StreakCalendar() {
     
     const allTasks = await getData<DailyTask>('daily_tasks', session.user.id);
     const taskHistory = allTasks.reduce((acc, task) => {
-      const date = new Date(task.created_at).toISOString().split('T')[0];
+      const date = new Date(task.created_at).toLocaleDateString('en-CA');
       if (!acc[date]) {
         acc[date] = [];
       }
@@ -49,15 +51,14 @@ export default function StreakCalendar() {
 
     const completed = new Set<string>();
     let currentStreak = 0;
-    // Use UTC+1 timezone (Europe/London or similar)
+    // Use device local time consistently
     const today = new Date();
-    const utcPlus1 = new Date(today.getTime() + (1 * 60 * 60 * 1000));
     
     // Check each day for completion
     for (let i = 0; i < 365; i++) {
-      const checkDate = new Date(utcPlus1);
-      checkDate.setDate(utcPlus1.getDate() - i);
-      const dateStr = checkDate.toISOString().split('T')[0];
+      const checkDate = new Date(today);
+      checkDate.setDate(today.getDate() - i);
+      const dateStr = checkDate.toLocaleDateString('en-CA');
       
       const dayTasks = taskHistory[dateStr] || [];
       const allCompleted = dayTasks.length >= 9 && dayTasks.every(task => task.is_completed);
@@ -91,7 +92,7 @@ export default function StreakCalendar() {
     for (let i = 0; i < startingDayOfWeek; i++) {
       const prevDate = new Date(year, month, -startingDayOfWeek + i + 1);
       days.push({
-        date: prevDate.toISOString().split('T')[0],
+        date: prevDate.toLocaleDateString('en-CA'),
         completed: false,
         isToday: false,
         isCurrentMonth: false,
@@ -100,11 +101,9 @@ export default function StreakCalendar() {
 
     // Add days of the current month
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = new Date(year, month, day).toISOString().split('T')[0];
-      // Use UTC+1 for today comparison
-      const todayUtcPlus1 = new Date();
-      const todayUtcPlus1Str = new Date(todayUtcPlus1.getTime() + (1 * 60 * 60 * 1000)).toISOString().split('T')[0];
-      const isToday = dateStr === todayUtcPlus1Str;
+      const dateStr = new Date(year, month, day).toLocaleDateString('en-CA');
+      const todayLocalStr = new Date().toLocaleDateString('en-CA');
+      const isToday = dateStr === todayLocalStr;
       const completed = completedDays.has(dateStr);
       
       days.push({
@@ -131,7 +130,7 @@ export default function StreakCalendar() {
   };
 
   const days = getDaysInMonth(currentDate);
-  const monthName = currentDate.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+  const monthName = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(currentDate);
 
   return (
     <Card>
@@ -141,12 +140,12 @@ export default function StreakCalendar() {
             <Calendar className="h-5 w-5" />
             <div>
               <CardTitle>Streak Calendar</CardTitle>
-        <CardDescription>
-          {streak} day streak
-        </CardDescription>
             </div>
           </div>
           <div className="flex gap-2">
+            <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)}>
+              {collapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </Button>
             <button
               onClick={() => navigateMonth('prev')}
               className="p-1 hover:bg-muted rounded"
@@ -162,10 +161,11 @@ export default function StreakCalendar() {
           </div>
         </div>
       </CardHeader>
+      {!collapsed && (
       <CardContent>
         <div className="space-y-4">
           {/* Month Header */}
-          <div className="text-center font-semibold">{monthName}</div>
+          <div className="text-center font-semibold">{monthName} • {streak} day streak</div>
           
           {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-1">
@@ -206,6 +206,7 @@ export default function StreakCalendar() {
           </div>
         </div>
       </CardContent>
+      )}
     </Card>
   );
 }

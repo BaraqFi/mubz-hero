@@ -16,15 +16,29 @@ import {
   getData,
   upsertData,
   insertData,
+  updateById,
   DailyTask,
 } from '@/lib/data-service';
-import { Plus, CheckSquare, Square } from 'lucide-react';
+import { Plus, CheckSquare, Square, Edit } from 'lucide-react';
 
 export default function DailyTasks() {
   const { session } = useAuth();
   const [tasks, setTasks] = useState<DailyTask[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [streak, setStreak] = useState(0);
+  const [isEditingAll, setIsEditingAll] = useState(false);
+
+  const DEFAULT_TASKS = [
+    'Deep Focus Block (Solidity/JS)',
+    'Airdrop Farming',
+    'Content Creation (Threads)',
+    'Twitter Reply-Guy',
+    'Leisure (30m Games/Books)',
+    'Debug / Practice',
+    'Side Project',
+    'Twitter 2nd Round + Farming Logs',
+    'Reflection + Plan',
+  ];
 
   useEffect(() => {
     if (session) {
@@ -42,7 +56,18 @@ export default function DailyTasks() {
     const today = new Date().toISOString().split('T')[0];
     const todayTasks = data.filter(t => new Date(t.created_at).toISOString().split('T')[0] === today);
     
-    // If we have less than 9, create empty ones
+    // If none for today, seed defaults; else top up with blanks
+    if (todayTasks.length === 0) {
+      const seed = DEFAULT_TASKS.map((t) => ({
+        user_id: session.user.id,
+        task: t,
+        is_completed: false,
+      }));
+      const { data: seeded } = await insertData('daily_tasks', seed as any);
+      if (seeded) {
+        todayTasks.push(...(seeded as any));
+      }
+    }
     while (todayTasks.length < 9) {
       const newTask = {
         user_id: session.user.id,
@@ -115,10 +140,7 @@ export default function DailyTasks() {
     
     const taskToUpdate = tasks[index];
     if (taskToUpdate) {
-      await upsertData('daily_tasks', {
-        id: taskToUpdate.id,
-        is_completed: !taskToUpdate.is_completed
-      });
+      await updateById<DailyTask>('daily_tasks', taskToUpdate.id, { is_completed: !taskToUpdate.is_completed });
       
       const updatedTasks = [...tasks];
       updatedTasks[index] = { ...taskToUpdate, is_completed: !taskToUpdate.is_completed };
@@ -173,12 +195,15 @@ export default function DailyTasks() {
           <div className="flex items-center gap-2">
             <CheckSquare className="h-5 w-5" />
             <div>
-              <CardTitle>Daily Tasks</CardTitle>
+        <CardTitle>Daily Tasks</CardTitle>
               <CardDescription>
                 {completedCount}/{tasks.length} completed • {streak} day streak
               </CardDescription>
             </div>
           </div>
+          <Button variant="ghost" size="icon" onClick={() => setIsEditingAll(!isEditingAll)} title={isEditingAll ? 'Done' : 'Edit'}>
+            <Edit className="h-4 w-4" />
+          </Button>
           {allCompleted && (
             <div className="text-green-500 font-semibold text-sm">
               🔥 Streak Day!
@@ -190,12 +215,12 @@ export default function DailyTasks() {
         <div className="space-y-3 max-h-80 overflow-y-auto">
           {tasks.map((task, index) => (
             <div key={task.id} className="flex items-center space-x-3">
-              <Checkbox
-                checked={task.is_completed}
+                <Checkbox
+                  checked={task.is_completed}
                 onCheckedChange={() => handleToggleCompletion(index)}
                 className="border-primary"
               />
-              {editingIndex === index ? (
+              {isEditingAll || editingIndex === index ? (
                 <Input
                   value={task.task}
                   onChange={(e) => handleUpdateTask(index, e.target.value)}
@@ -219,8 +244,8 @@ export default function DailyTasks() {
                   {task.task || `Task ${index + 1}`}
                 </div>
               )}
-            </div>
-          ))}
+              </div>
+            ))}
           
           {/* Add Task Button - Only show if less than 9 tasks */}
           {tasks.length < 9 && (

@@ -20,7 +20,16 @@ import {
   MonthlyGoal,
   MonthlyGoalTarget,
 } from '@/lib/data-service';
-import { Plus, Edit, Save, Calendar } from 'lucide-react';
+import { Plus, Edit, Save, Calendar, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { deleteData, deleteWhere } from '@/lib/data-service';
 
 interface GoalWithTargets extends MonthlyGoal {
   targets: MonthlyGoalTarget[];
@@ -31,6 +40,9 @@ export default function MonthlyGoals() {
   const [goals, setGoals] = useState<GoalWithTargets[]>([]);
   const [editingGoal, setEditingGoal] = useState<string | null>(null);
   const [showNewGoalForm, setShowNewGoalForm] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [newGoal, setNewGoal] = useState({
     primary_focus: '',
     key_resources: '',
@@ -147,16 +159,19 @@ export default function MonthlyGoals() {
   return (
     <Card className="relative z-10">
       <CardHeader className="sticky top-0 bg-background z-20 border-b">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
             <CardTitle>Monthly Goals</CardTitle>
+          </div>
+          <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)}>
+            {collapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          </Button>
         </div>
-        <CardDescription>
-          Track your goals and stay focused on your primary objectives for the month.
-        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
+      {!collapsed && (
+        <CardContent>
+          <div className="space-y-6">
           {/* Add New Goal Button */}
           <div className="flex justify-end">
             <Button 
@@ -263,15 +278,58 @@ export default function MonthlyGoals() {
                       <div className="w-6 h-6 bg-muted rounded flex items-center justify-center text-sm font-medium">
                         {index + 1}
                       </div>
-                      <CardTitle className="text-lg">Month {index + 1}</CardTitle>
+                      <Input
+                        value={goal.goal || `Goal ${index + 1}`}
+                        onChange={(e) => handleUpdateGoal(goal.id, { goal: e.target.value })}
+                        className="h-8"
+                      />
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setEditingGoal(isEditing ? null : goal.id)}
-                    >
-                      {isEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingGoal(isEditing ? null : goal.id)}
+                        title={isEditing ? 'Save' : 'Edit'}
+                      >
+                        {isEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+                      </Button>
+                      <Dialog open={deletingGoalId === goal.id} onOpenChange={(open) => setDeletingGoalId(open ? goal.id : null)}>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="icon" title="Delete">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Delete this goal?</DialogTitle>
+                          </DialogHeader>
+                          <DialogFooter>
+                            <Button
+                              variant="outline"
+                              onClick={() => setDeletingGoalId(null)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={async () => {
+                                if (!goal.id) return;
+                                setIsDeleting(true);
+                                // delete targets first (FK)
+                                await deleteWhere('monthly_goal_targets', 'goal_id', goal.id);
+                                await deleteData('monthly_goals', goal.id);
+                                setIsDeleting(false);
+                                setDeletingGoalId(null);
+                                await loadGoals();
+                              }}
+                              disabled={isDeleting}
+                            >
+                              {isDeleting ? 'Deleting…' : 'Delete'}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -353,6 +411,7 @@ export default function MonthlyGoals() {
           })}
         </div>
       </CardContent>
+      )}
     </Card>
   );
 }
