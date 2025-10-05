@@ -52,7 +52,7 @@ export default function HeroSection() {
   };
 
   return (
-    <Card className="lg:col-span-2">
+    <Card className="lg:col-span-2 md:col-span-2">
       <CardHeader className="pb-2">
         <CardTitle>Hero Section</CardTitle>
         <CardDescription>Customize your dashboard's hero section.</CardDescription>

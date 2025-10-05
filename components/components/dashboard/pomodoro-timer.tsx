@@ -98,7 +98,7 @@ export default function PomodoroTimer() {
   };
 
   return (
-    <Card className="sm:col-span-2">
+    <Card className="sm:col-span-2 md:col-span-2">
       <CardHeader className="space-y-1">
         <CardTitle>Pomodoro Timer</CardTitle>
         <CardDescription>
