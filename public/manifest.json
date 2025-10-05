@@ -1,0 +1,16 @@
+{
+  "name": "Mubz2Hero",
+  "short_name": "Mubz2Hero",
+  "description": "A Full-Stack PWA with Supabase",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
