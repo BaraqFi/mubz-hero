@@ -53,23 +53,25 @@ export default function HeroSection() {
 
   return (
     <Card className="lg:col-span-2">
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle>Hero Section</CardTitle>
         <CardDescription>Customize your dashboard's hero section.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <Input
             placeholder="Hero Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            className="text-sm sm:text-base"
           />
           <Textarea
             placeholder="Hero Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            className="text-sm sm:text-base"
           />
-          <Button onClick={handleSave}>Save</Button>
+          <Button onClick={handleSave} className="w-full sm:w-auto">Save</Button>
         </div>
       </CardContent>
     </Card>

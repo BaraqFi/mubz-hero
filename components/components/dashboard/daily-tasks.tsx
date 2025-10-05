@@ -190,14 +190,14 @@ export default function DailyTasks() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CheckSquare className="h-5 w-5" />
             <div>
         <CardTitle>Daily Tasks</CardTitle>
               <CardDescription>
-                {completedCount}/{tasks.length} completed • {streak} day streak
+                <span className="text-sm">{completedCount}/{tasks.length} completed • {streak} day streak</span>
               </CardDescription>
             </div>
           </div>
@@ -212,13 +212,13 @@ export default function DailyTasks() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3 max-h-80 overflow-y-auto">
+        <div className="space-y-2 sm:space-y-3 max-h-72 sm:max-h-80 overflow-y-auto pr-1">
           {tasks.map((task, index) => (
-            <div key={task.id} className="flex items-center space-x-3">
+            <div key={task.id} className="flex items-center gap-2 sm:gap-3">
                 <Checkbox
                   checked={task.is_completed}
                 onCheckedChange={() => handleToggleCompletion(index)}
-                className="border-primary"
+                className="border-primary h-5 w-5"
               />
               {isEditingAll || editingIndex === index ? (
                 <Input
@@ -231,12 +231,12 @@ export default function DailyTasks() {
                     }
                   }}
                   placeholder={`Task ${index + 1}`}
-                  className="flex-1"
+                  className="flex-1 text-sm"
                   autoFocus
                 />
               ) : (
                 <div 
-                  className={`flex-1 cursor-pointer p-2 rounded ${
+                  className={`flex-1 cursor-pointer p-1.5 sm:p-2 rounded text-sm ${
                     task.task ? '' : 'text-muted-foreground italic'
                   } ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}
                   onClick={() => setEditingIndex(index)}

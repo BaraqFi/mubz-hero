@@ -56,26 +56,27 @@ export default function LogList({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="flex space-x-2">
+        <div className="space-y-3">
+          <div className="flex gap-2 sm:flex-row flex-col">
             <Input
               placeholder="Add a new log"
               value={newLog}
               onChange={(e) => setNewLog(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddLog()}
+              className="flex-1"
             />
-            <Button onClick={handleAddLog}>Add</Button>
+            <Button onClick={handleAddLog} className="sm:w-auto w-full">Add</Button>
           </div>
           <div className="space-y-2">
             {logs.map((log) => (
               <div key={log.id} className="flex items-center space-x-2">
-                <p className="flex-1">{log.log}</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="flex-1 text-sm">{log.log}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {new Date(log.created_at).toLocaleDateString()}
                 </p>
               </div>

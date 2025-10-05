@@ -94,23 +94,23 @@ export default function WeeklyThreadTracker() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle>Weekly Thread Tracker</CardTitle>
       </CardHeader>
       <CardContent>
         {/* Small screens: horizontal list */}
-        <div className="flex gap-4 overflow-x-auto sm:hidden">
+        <div className="flex gap-3 overflow-x-auto sm:hidden -mx-2 px-2">
           {rotateFromToday.map((day) => {
             const isToday = day.day_of_week === todayIndex;
             return (
-              <div key={day.day_of_week} className="relative flex flex-col items-center min-w-16">
+              <div key={day.day_of_week} className="relative flex flex-col items-center min-w-14">
                 {isToday && <span className="absolute -top-1 h-1.5 w-1.5 rounded-full bg-primary" />}
-                <span className="text-sm mb-2">{daysOfWeek[day.day_of_week].slice(0,3)}</span>
+                <span className="text-xs mb-1">{daysOfWeek[day.day_of_week].slice(0,3)}</span>
                 <Checkbox
                   id={`day-${day.day_of_week}`}
                   checked={day.is_completed}
                   onCheckedChange={() => handleToggleDay(day)}
-                  className={isToday ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded' : ''}
+                  className={(isToday ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded ' : '') + 'h-5 w-5'}
                 />
               </div>
             );

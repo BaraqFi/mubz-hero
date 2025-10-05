@@ -81,7 +81,7 @@ export default function DailyAchievements() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <Target className="h-5 w-5" />
           <CardTitle>Daily Achievements</CardTitle>
@@ -91,13 +91,13 @@ export default function DailyAchievements() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {achievements.map((achievement, index) => (
-            <div key={achievement.id} className="flex items-center space-x-3">
+            <div key={achievement.id} className="flex items-center gap-2 sm:gap-3">
               <Checkbox
                 checked={completedAchievements.has(achievement.id)}
                 onCheckedChange={() => handleToggleCompletion(achievement.id)}
-                className="border-primary"
+                className="border-primary h-5 w-5"
               />
               {editingIndex === index ? (
                 <Input
@@ -110,12 +110,12 @@ export default function DailyAchievements() {
                     }
                   }}
                   placeholder={`Achievement ${index + 1}`}
-                  className="flex-1"
+                  className="flex-1 text-sm"
                   autoFocus
                 />
               ) : (
                 <div 
-                  className={`flex-1 cursor-pointer p-2 rounded ${
+                  className={`flex-1 cursor-pointer p-1.5 sm:p-2 rounded text-sm ${
                     achievement.achievement ? '' : 'text-muted-foreground italic'
                   } ${completedAchievements.has(achievement.id) ? 'line-through text-muted-foreground' : ''}`}
                   onClick={() => setEditingIndex(index)}

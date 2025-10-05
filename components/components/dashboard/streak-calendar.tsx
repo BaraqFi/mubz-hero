@@ -134,7 +134,7 @@ export default function StreakCalendar() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -163,15 +163,15 @@ export default function StreakCalendar() {
       </CardHeader>
       {!collapsed && (
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Month Header */}
-          <div className="text-center font-semibold">{monthName} • {streak} day streak</div>
+          <div className="text-center font-semibold text-sm sm:text-base">{monthName} • {streak} day streak</div>
           
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
             {/* Day headers */}
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
+              <div key={day} className="text-center text-[10px] sm:text-xs font-medium text-muted-foreground p-1 sm:p-2">
                 {day}
               </div>
             ))}
@@ -181,7 +181,7 @@ export default function StreakCalendar() {
               <div
                 key={index}
                 className={`
-                  aspect-square flex items-center justify-center text-sm rounded
+                  aspect-square flex items-center justify-center text-xs sm:text-sm rounded
                   ${!day.isCurrentMonth ? 'text-muted-foreground/50' : ''}
                   ${day.isToday ? 'bg-primary text-primary-foreground font-semibold' : ''}
                   ${day.completed && day.isCurrentMonth && !day.isToday ? 'bg-green-500 text-white' : ''}
@@ -194,13 +194,13 @@ export default function StreakCalendar() {
           </div>
           
           {/* Legend */}
-          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center justify-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded"></div>
               <span>Completed</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-primary rounded"></div>
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-primary rounded"></div>
               <span>Today</span>
             </div>
           </div>

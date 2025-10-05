@@ -98,23 +98,23 @@ export default function PomodoroTimer() {
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="sm:col-span-2">
+      <CardHeader className="space-y-1">
         <CardTitle>Pomodoro Timer</CardTitle>
         <CardDescription>
           Focus for {FOCUS_TIME_MINUTES} minutes.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col items-center space-y-4">
-          <div className="text-6xl font-bold">{formatTime(time)}</div>
-          <div className="flex space-x-2">
+        <div className="flex flex-col items-center space-y-3 sm:space-y-4">
+          <div className="text-5xl sm:text-6xl font-bold leading-none">{formatTime(time)}</div>
+          <div className="flex gap-2 flex-wrap justify-center">
             <Button onClick={toggleTimer}>{isActive ? 'Pause' : 'Start'}</Button>
             <Button variant="outline" onClick={resetTimer}>
               Reset
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground text-center">
             Today's focus time: {Math.floor((settings?.focus_time_today || 0) / 60)} minutes
           </p>
         </div>
