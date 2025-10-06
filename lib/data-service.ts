@@ -21,11 +21,19 @@ export type DashboardSettings = Database['public']['Tables']['dashboard_settings
 const supabase = createClient();
 
 // Generic get function
-export async function getData<T>(table: string, userId: string): Promise<T[]> {
-  const { data, error } = await supabase
-    .from(table)
-    .select('*')
-    .eq('user_id', userId);
+export async function getData<T>(
+  table: string,
+  userId: string,
+  date?: string
+): Promise<T[]> {
+  let query = supabase.from(table).select('*').eq('user_id', userId);
+
+  if (date) {
+    query = query.gte('created_at', `${date}T00:00:00Z`);
+    query = query.lte('created_at', `${date}T23:59:59Z`);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error(`Error fetching from ${table}:`, error);

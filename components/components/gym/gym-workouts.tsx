@@ -54,11 +54,9 @@ export default function GymWorkouts() {
     
     const data = await getData<GymWorkout>('gym_workouts', session.user.id);
     
-    // Separate required and optional workouts
-    const required = data.filter(w => w.is_required).slice(0, 9);
-    const optional = data.filter(w => !w.is_required);
+    let required = data.filter(w => w.is_required);
+    let optional = data.filter(w => !w.is_required);
     
-    // Seed defaults if none exist
     if (required.length === 0) {
       const seedReq = REQUIRED_DEFAULTS.map((w) => ({
         user_id: session.user.id,
@@ -67,7 +65,7 @@ export default function GymWorkouts() {
         is_completed: false,
       }));
       const { data: seededReq } = await insertData('gym_workouts', seedReq as any);
-      if (seededReq) required.push(...(seededReq as any));
+      if (seededReq) required = seededReq as any;
     }
     if (optional.length === 0) {
       const seedOpt = OPTIONAL_DEFAULTS.map((w) => ({
@@ -77,20 +75,10 @@ export default function GymWorkouts() {
         is_completed: false,
       }));
       const { data: seededOpt } = await insertData('gym_workouts', seedOpt as any);
-      if (seededOpt) optional.push(...(seededOpt as any));
-    }
-    // Ensure exactly 9 required
-    while (required.length < 9) {
-      const { data: result } = await insertData('gym_workouts', {
-        user_id: session.user.id,
-        workout: '',
-        is_required: true,
-        is_completed: false,
-      } as any);
-      if (result && result[0]) required.push(result[0] as any);
+      if (seededOpt) optional = seededOpt as any;
     }
     
-    setRequiredWorkouts(required.slice(0, 9));
+    setRequiredWorkouts(required);
     setOptionalWorkouts(optional);
   };
 
@@ -150,6 +138,22 @@ export default function GymWorkouts() {
     setOptionalWorkouts(updated);
   };
 
+  const handleAddRequired = async () => {
+    if (!session) return;
+    
+    const newWorkout = {
+      user_id: session.user.id,
+      workout: 'New required workout',
+      is_required: true,
+      is_completed: false,
+    };
+    
+    const { data: result } = await insertData('gym_workouts', newWorkout);
+    if (result && result[0]) {
+      setRequiredWorkouts([...requiredWorkouts, result[0] as any]);
+    }
+  };
+
   const handleAddOptional = async () => {
     if (!session) return;
     
@@ -167,7 +171,7 @@ export default function GymWorkouts() {
   };
 
   const requiredCompleted = requiredWorkouts.filter(w => w.is_completed).length;
-  const allRequiredCompleted = requiredCompleted === 9;
+  const allRequiredCompleted = requiredCompleted === requiredWorkouts.length;
 
   return (
     <div className="space-y-6">
@@ -180,10 +184,18 @@ export default function GymWorkouts() {
               <div>
                 <CardTitle>Required Workouts</CardTitle>
                 <CardDescription>
-                  {requiredCompleted}/9 completed • {allRequiredCompleted ? '🔥 All done!' : 'Complete all for streak'}
+                  {requiredCompleted}/{requiredWorkouts.length} completed • {allRequiredCompleted ? '🔥 All done!' : 'Complete all for streak'}
                 </CardDescription>
               </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAddRequired}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Required
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

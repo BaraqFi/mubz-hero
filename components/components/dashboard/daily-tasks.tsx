@@ -9,24 +9,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   getData,
-  upsertData,
   insertData,
   updateById,
   DailyTask,
 } from '@/lib/data-service';
-import { Plus, CheckSquare, Square, Edit } from 'lucide-react';
+import { CheckSquare } from 'lucide-react';
 
 export default function DailyTasks() {
   const { session } = useAuth();
   const [tasks, setTasks] = useState<DailyTask[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [streak, setStreak] = useState(0);
-  const [isEditingAll, setIsEditingAll] = useState(false);
 
   const DEFAULT_TASKS = [
     'Deep Focus Block (Solidity/JS)',
@@ -49,45 +44,28 @@ export default function DailyTasks() {
 
   const loadTasks = async () => {
     if (!session) return;
-    
-    const data = await getData<DailyTask>('daily_tasks', session.user.id);
-    
-    // Ensure we have exactly 9 tasks
+
     const today = new Date().toISOString().split('T')[0];
-    const todayTasks = data.filter(t => new Date(t.created_at).toISOString().split('T')[0] === today);
-    
-    // If none for today, seed defaults; else top up with blanks
+    let todayTasks = await getData<DailyTask>('daily_tasks', session.user.id, today);
+
     if (todayTasks.length === 0) {
-      const seed = DEFAULT_TASKS.map((t) => ({
+      const seed = DEFAULT_TASKS.map((task) => ({
         user_id: session.user.id,
-        task: t,
+        task,
         is_completed: false,
       }));
       const { data: seeded } = await insertData('daily_tasks', seed);
       if (seeded) {
-        todayTasks.push(...(seeded as DailyTask[]));
-      }
-    }
-    while (todayTasks.length < 9) {
-      const newTask = {
-        user_id: session.user.id,
-        task: '',
-        is_completed: false,
-      };
-      const { data: result } = await insertData('daily_tasks', newTask);
-      if (result && result[0]) {
-        todayTasks.push(result[0] as any);
+        todayTasks = seeded as DailyTask[];
       }
     }
     
-    // Limit to exactly 9 tasks
-    setTasks(todayTasks.slice(0, 9));
+    setTasks(todayTasks);
   };
 
   const loadStreak = async () => {
     if (!session) return;
     
-    // Calculate streak by checking consecutive days of completed tasks
     const allTasks = await getData<DailyTask>('daily_tasks', session.user.id);
     const taskHistory = allTasks.reduce((acc, task) => {
       const date = new Date(task.created_at).toISOString().split('T')[0];
@@ -101,7 +79,7 @@ export default function DailyTasks() {
     let currentStreak = 0;
     const today = new Date();
     
-    for (let i = 0; i < 365; i++) { // Check up to a year back
+    for (let i = 0; i < 365; i++) {
       const checkDate = new Date(today);
       checkDate.setDate(today.getDate() - i);
       const dateStr = checkDate.toISOString().split('T')[0];
@@ -119,22 +97,6 @@ export default function DailyTasks() {
     setStreak(currentStreak);
   };
 
-  const handleUpdateTask = async (index: number, task: string) => {
-    if (!session) return;
-    
-    const taskToUpdate = tasks[index];
-    if (taskToUpdate) {
-      await upsertData('daily_tasks', {
-        id: taskToUpdate.id,
-        task: task.trim()
-      });
-      
-      const updatedTasks = [...tasks];
-      updatedTasks[index] = { ...taskToUpdate, task: task.trim() };
-      setTasks(updatedTasks);
-    }
-  };
-
   const handleToggleCompletion = async (index: number) => {
     if (!session) return;
     
@@ -146,34 +108,16 @@ export default function DailyTasks() {
       updatedTasks[index] = { ...taskToUpdate, is_completed: !taskToUpdate.is_completed };
       setTasks(updatedTasks);
       
-      // Check if all tasks are completed to update streak
       const allCompleted = updatedTasks.every(task => task.is_completed);
       if (allCompleted) {
-        // Record completion for today
         await recordDailyCompletion();
       }
-    }
-  };
-
-  const handleAddTask = async () => {
-    if (!session || tasks.length >= 9) return;
-    
-    const newTask = {
-      user_id: session.user.id,
-      task: 'New task',
-      is_completed: false,
-    };
-    
-    const { data: result } = await insertData('daily_tasks', newTask);
-    if (result && result[0]) {
-      setTasks([...tasks, result[0] as any]);
     }
   };
 
   const recordDailyCompletion = async () => {
     if (!session) return;
     
-    // Record completion in task_completion_history
     const today = new Date().toISOString().split('T')[0];
     await insertData('task_completion_history', {
       user_id: session.user.id,
@@ -181,7 +125,6 @@ export default function DailyTasks() {
       tasks_completed: tasks.length
     });
     
-    // Reload streak
     await loadStreak();
   };
 
@@ -195,15 +138,12 @@ export default function DailyTasks() {
           <div className="flex items-center gap-2">
             <CheckSquare className="h-5 w-5" />
             <div>
-        <CardTitle>Daily Tasks</CardTitle>
+              <CardTitle>Daily Tasks</CardTitle>
               <CardDescription>
                 <span className="text-sm">{completedCount}/{tasks.length} completed • {streak} day streak</span>
               </CardDescription>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setIsEditingAll(!isEditingAll)} title={isEditingAll ? 'Done' : 'Edit'}>
-            <Edit className="h-4 w-4" />
-          </Button>
           {allCompleted && (
             <div className="text-green-500 font-semibold text-sm">
               🔥 Streak Day!
@@ -215,50 +155,20 @@ export default function DailyTasks() {
         <div className="space-y-2 sm:space-y-3 max-h-72 sm:max-h-80 overflow-y-auto pr-1">
           {tasks.map((task, index) => (
             <div key={task.id} className="flex items-center gap-2 sm:gap-3">
-                <Checkbox
-                  checked={task.is_completed}
+              <Checkbox
+                checked={task.is_completed}
                 onCheckedChange={() => handleToggleCompletion(index)}
                 className="border-primary h-5 w-5"
               />
-              {isEditingAll || editingIndex === index ? (
-                <Input
-                  value={task.task}
-                  onChange={(e) => handleUpdateTask(index, e.target.value)}
-                  onBlur={() => setEditingIndex(null)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      setEditingIndex(null);
-                    }
-                  }}
-                  placeholder={`Task ${index + 1}`}
-                  className="flex-1 text-sm"
-                  autoFocus
-                />
-              ) : (
-                <div 
-                  className={`flex-1 cursor-pointer p-1.5 sm:p-2 rounded text-sm ${
-                    task.task ? '' : 'text-muted-foreground italic'
-                  } ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}
-                  onClick={() => setEditingIndex(index)}
-                >
-                  {task.task || `Task ${index + 1}`}
-                </div>
-              )}
+              <div 
+                className={`flex-1 p-1.5 sm:p-2 rounded text-sm ${
+                  task.is_completed ? 'line-through text-muted-foreground' : ''
+                }`}
+              >
+                {task.task}
               </div>
-            ))}
-          
-          {/* Add Task Button - Only show if less than 9 tasks */}
-          {tasks.length < 9 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAddTask}
-              className="w-full border-dashed"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Task
-            </Button>
-          )}
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
