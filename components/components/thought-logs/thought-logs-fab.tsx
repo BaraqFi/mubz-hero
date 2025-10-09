@@ -78,20 +78,12 @@ export default function ThoughtLogsFAB() {
           onClick={() => setIsOpen(false)}
         >
           <div 
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-background border-l shadow-xl flex flex-col"
+            className="fixed right-0 top-0 h-full w-full sm:w-96 sm:max-w-md bg-background border-l shadow-xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-lg font-semibold">Log Your Thoughts</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(false)}
-                className="rounded-full"
-              >
-                <X className="h-5 w-5" />
-              </Button>
             </div>
 
             {/* Content Area */}
@@ -141,21 +133,39 @@ export default function ThoughtLogsFAB() {
             {/* Footer */}
             <div className="p-4 border-t">
               {!showPastEntries && (
-                <Button
-                  onClick={handleSaveEntry}
-                  className="w-full"
-                  disabled={!currentEntry.trim()}
-                >
-                  Save Entry
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSaveEntry}
+                    className="flex-1"
+                    disabled={!currentEntry.trim()}
+                  >
+                    Save Entry
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsOpen(false)}
+                    className="px-3"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
                {showPastEntries && (
-                <Button
-                  onClick={() => setShowPastEntries(false)}
-                  className="w-full"
-                >
-                  Back to New Entry
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setShowPastEntries(false)}
+                    className="flex-1"
+                  >
+                    Back to New Entry
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsOpen(false)}
+                    className="px-3"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
             </div>
           </div>

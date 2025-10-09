@@ -280,7 +280,7 @@ export default function DailyTasks() {
         </div>
       </CardContent>
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md sm:max-w-lg mx-4">
           <DialogHeader>
             <DialogTitle>Edit Daily Tasks</DialogTitle>
           </DialogHeader>
@@ -304,9 +304,9 @@ export default function DailyTasks() {
               <span className="text-sm">Apply changes to today</span>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveTemplate}>Save</Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsEditOpen(false)} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleSaveTemplate} className="w-full sm:w-auto">Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
