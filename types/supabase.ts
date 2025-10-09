@@ -45,6 +45,7 @@ export interface Database {
           task: string;
           is_completed: boolean;
           created_at: string;
+          task_date: string;
         };
         Insert: {
           id?: string;
@@ -52,6 +53,7 @@ export interface Database {
           task: string;
           is_completed?: boolean;
           created_at?: string;
+          task_date: string;
         };
         Update: {
           id?: string;
@@ -59,6 +61,7 @@ export interface Database {
           task?: string;
           is_completed?: boolean;
           created_at?: string;
+          task_date?: string;
         };
       };
       daily_achievements: {

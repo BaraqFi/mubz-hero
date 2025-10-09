@@ -52,7 +52,8 @@ export default function GymWorkouts() {
   const loadWorkouts = async () => {
     if (!session) return;
     
-    const data = await getData<GymWorkout>('gym_workouts', session.user.id);
+    const today = new Date().toISOString().split('T')[0];
+    const data = await getData<GymWorkout>('gym_workouts', session.user.id, today);
     
     let required = data.filter(w => w.is_required);
     let optional = data.filter(w => !w.is_required);
@@ -63,6 +64,7 @@ export default function GymWorkouts() {
         workout: w,
         is_required: true,
         is_completed: false,
+        created_at: new Date().toISOString(),
       }));
       const { data: seededReq } = await insertData('gym_workouts', seedReq as any);
       if (seededReq) required = seededReq as any;
@@ -73,6 +75,7 @@ export default function GymWorkouts() {
         workout: w,
         is_required: false,
         is_completed: false,
+        created_at: new Date().toISOString(),
       }));
       const { data: seededOpt } = await insertData('gym_workouts', seedOpt as any);
       if (seededOpt) optional = seededOpt as any;
